@@ -1,0 +1,5 @@
+LangChain Milvus Lite 初始化完成
+集合名：hk_law_chunk_collection
+嵌入模型：BAAI/bge-large-en-law
+服务端口：19530
+关联 Document 字段：chunk_id、law_field、doc_type、source、metadata_ref
