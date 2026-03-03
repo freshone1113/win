@@ -1,0 +1,137 @@
+2025-11-15 01:21:13,489 INFO [default] [KNOWHERE][SetBlasThreshold][] Set faiss::distance_compute_blas_threshold to 16384
+2025-11-15 01:21:13,489 INFO [default] [KNOWHERE][SetEarlyStopThreshold][] Set faiss::early_stop_threshold to 0
+2025-11-15 01:21:13,489 INFO [default] [KNOWHERE][SetStatisticsLevel][] Set knowhere::STATISTICS_LEVEL to 0
+2025-11-15 01:21:13,489 INFO [default] [KNOWHERE][SetBlasThreshold][] Set faiss::distance_compute_blas_threshold to 16384
+2025-11-15 01:21:13,489 INFO [default] [KNOWHERE][SetEarlyStopThreshold][] Set faiss::early_stop_threshold to 0
+2025-11-15 01:21:13,489 INFO [default] [KNOWHERE][SetStatisticsLevel][] Set knowhere::STATISTICS_LEVEL to 0
+2025-11-15 01:21:13,489 DEBUG [default] [SERVER][operator()][] Config easylogging with yaml file: F:\juese4_de\CS-5481-master\milvus_lite_data/configs/easylogging.yaml
+2025-11-15 01:21:13,490 INFO [default] [KNOWHERE][SetSimdType][] FAISS expect simdType::AUTO
+2025-11-15 01:21:13,490 DEBUG [default] [SERVER][operator()][] Config easylogging with yaml file: F:\juese4_de\CS-5481-master\milvus_lite_data/configs/easylogging.yaml
+2025-11-15 01:21:13,490 INFO [default] [KNOWHERE][SetSimdType][] FAISS hook REF
+2025-11-15 01:21:13,490 DEBUG [default] [SEGCORE][SetIndexSliceSize][] set config index slice size(byte): 16777216
+2025-11-15 01:21:13,490 DEBUG [default] [SEGCORE][SegcoreSetSimdType][] set config simd_type: auto
+2025-11-15 01:21:13,490 INFO [default] [KNOWHERE][SetSimdType][] FAISS expect simdType::AUTO
+2025-11-15 01:21:13,490 INFO [default] [KNOWHERE][SetSimdType][] FAISS hook REF
+2025-11-15 01:21:13,490 DEBUG [default] [SEGCORE][SetThreadCoreCoefficient][] set thread pool core coefficient: 10
+2025-11-15 14:41:37,039 INFO [default] [KNOWHERE][SetBlasThreshold][] Set faiss::distance_compute_blas_threshold to 16384
+2025-11-15 14:41:37,039 INFO [default] [KNOWHERE][SetEarlyStopThreshold][] Set faiss::early_stop_threshold to 0
+2025-11-15 14:41:37,039 INFO [default] [KNOWHERE][SetStatisticsLevel][] Set knowhere::STATISTICS_LEVEL to 0
+2025-11-15 14:41:37,039 DEBUG [default] [SERVER][operator()][] Config easylogging with yaml file: F:\juese4_de\CS-5481-master\milvus_lite_data/configs/easylogging.yaml
+2025-11-15 14:41:37,039 DEBUG [default] [SEGCORE][SegcoreSetSimdType][] set config simd_type: auto
+2025-11-15 14:41:37,039 INFO [default] [KNOWHERE][SetSimdType][] FAISS expect simdType::AUTO
+2025-11-15 14:41:37,039 INFO [default] [KNOWHERE][SetSimdType][] FAISS hook REF
+2025-11-15 14:41:37,039 DEBUG [default] [SEGCORE][SetIndexSliceSize][] set config index slice size(byte): 16777216
+2025-11-15 14:41:37,039 DEBUG [default] [SEGCORE][SetThreadCoreCoefficient][] set thread pool core coefficient: 10
+2025-11-15 14:41:37,042 INFO [default] [KNOWHERE][SetBlasThreshold][] Set faiss::distance_compute_blas_threshold to 16384
+2025-11-15 14:41:37,042 INFO [default] [KNOWHERE][SetEarlyStopThreshold][] Set faiss::early_stop_threshold to 0
+2025-11-15 14:41:37,042 INFO [default] [KNOWHERE][SetStatisticsLevel][] Set knowhere::STATISTICS_LEVEL to 0
+2025-11-15 14:41:37,042 DEBUG [default] [SERVER][operator()][] Config easylogging with yaml file: F:\juese4_de\CS-5481-master\milvus_lite_data/configs/easylogging.yaml
+2025-11-15 14:41:37,042 INFO [default] [KNOWHERE][SetSimdType][] FAISS expect simdType::AUTO
+2025-11-15 14:41:37,042 INFO [default] [KNOWHERE][SetSimdType][] FAISS hook REF
+2025-11-15 14:41:50,982 INFO [default] [KNOWHERE][SetBlasThreshold][] Set faiss::distance_compute_blas_threshold to 16384
+2025-11-15 14:41:50,982 INFO [default] [KNOWHERE][SetEarlyStopThreshold][] Set faiss::early_stop_threshold to 0
+2025-11-15 14:41:50,982 INFO [default] [KNOWHERE][SetStatisticsLevel][] Set knowhere::STATISTICS_LEVEL to 0
+2025-11-15 14:41:50,982 DEBUG [default] [SERVER][operator()][] Config easylogging with yaml file: F:\juese4_de\CS-5481-master\milvus_lite_data/configs/easylogging.yaml
+2025-11-15 14:41:50,982 INFO [default] [KNOWHERE][SetSimdType][] FAISS expect simdType::AUTO
+2025-11-15 14:41:50,982 INFO [default] [KNOWHERE][SetSimdType][] FAISS hook REF
+2025-11-15 14:41:50,982 DEBUG [default] [SEGCORE][SetIndexSliceSize][] set config index slice size(byte): 16777216
+2025-11-15 14:41:50,982 DEBUG [default] [SEGCORE][SetThreadCoreCoefficient][] set thread pool core coefficient: 10
+2025-11-15 14:41:50,985 INFO [default] [KNOWHERE][SetBlasThreshold][] Set faiss::distance_compute_blas_threshold to 16384
+2025-11-15 14:41:50,985 INFO [default] [KNOWHERE][SetEarlyStopThreshold][] Set faiss::early_stop_threshold to 0
+2025-11-15 14:41:50,985 INFO [default] [KNOWHERE][SetStatisticsLevel][] Set knowhere::STATISTICS_LEVEL to 0
+2025-11-15 14:41:50,985 DEBUG [default] [SERVER][operator()][] Config easylogging with yaml file: F:\juese4_de\CS-5481-master\milvus_lite_data/configs/easylogging.yaml
+2025-11-15 14:41:50,985 DEBUG [default] [SEGCORE][SegcoreSetSimdType][] set config simd_type: auto
+2025-11-15 14:41:50,985 INFO [default] [KNOWHERE][SetSimdType][] FAISS expect simdType::AUTO
+2025-11-15 14:41:50,985 INFO [default] [KNOWHERE][SetSimdType][] FAISS hook REF
+2025-11-15 14:45:42,647 INFO [default] [KNOWHERE][SetBlasThreshold][] Set faiss::distance_compute_blas_threshold to 16384
+2025-11-15 14:45:42,647 INFO [default] [KNOWHERE][SetEarlyStopThreshold][] Set faiss::early_stop_threshold to 0
+2025-11-15 14:45:42,647 INFO [default] [KNOWHERE][SetStatisticsLevel][] Set knowhere::STATISTICS_LEVEL to 0
+2025-11-15 14:45:42,647 INFO [default] [KNOWHERE][SetBlasThreshold][] Set faiss::distance_compute_blas_threshold to 16384
+2025-11-15 14:45:42,647 INFO [default] [KNOWHERE][SetEarlyStopThreshold][] Set faiss::early_stop_threshold to 0
+2025-11-15 14:45:42,647 INFO [default] [KNOWHERE][SetStatisticsLevel][] Set knowhere::STATISTICS_LEVEL to 0
+2025-11-15 14:45:42,648 DEBUG [default] [SERVER][operator()][] Config easylogging with yaml file: F:\juese4_de\CS-5481-master\milvus_lite_data/configs/easylogging.yaml
+2025-11-15 14:45:42,648 INFO [default] [KNOWHERE][SetSimdType][] FAISS expect simdType::AUTO
+2025-11-15 14:45:42,648 INFO [default] [KNOWHERE][SetSimdType][] FAISS hook REF
+2025-11-15 14:45:42,648 DEBUG [default] [SEGCORE][SetIndexSliceSize][] set config index slice size(byte): 16777216
+2025-11-15 14:45:42,648 DEBUG [default] [SEGCORE][SetThreadCoreCoefficient][] set thread pool core coefficient: 10
+2025-11-15 14:45:42,648 DEBUG [default] [SERVER][operator()][] Config easylogging with yaml file: F:\juese4_de\CS-5481-master\milvus_lite_data/configs/easylogging.yaml
+2025-11-15 14:45:42,648 DEBUG [default] [SEGCORE][SegcoreSetSimdType][] set config simd_type: auto
+2025-11-15 14:45:42,648 INFO [default] [KNOWHERE][SetSimdType][] FAISS expect simdType::AUTO
+2025-11-15 14:45:42,648 INFO [default] [KNOWHERE][SetSimdType][] FAISS hook REF
+2025-11-15 14:49:54,601 INFO [default] [KNOWHERE][SetBlasThreshold][] Set faiss::distance_compute_blas_threshold to 16384
+2025-11-15 14:49:54,601 INFO [default] [KNOWHERE][SetEarlyStopThreshold][] Set faiss::early_stop_threshold to 0
+2025-11-15 14:49:54,601 INFO [default] [KNOWHERE][SetStatisticsLevel][] Set knowhere::STATISTICS_LEVEL to 0
+2025-11-15 14:49:54,601 DEBUG [default] [SERVER][operator()][] Config easylogging with yaml file: F:\juese4_de\CS-5481-master\milvus_lite_data/configs/easylogging.yaml
+2025-11-15 14:49:54,601 INFO [default] [KNOWHERE][SetSimdType][] FAISS expect simdType::AUTO
+2025-11-15 14:49:54,601 INFO [default] [KNOWHERE][SetSimdType][] FAISS hook REF
+2025-11-15 14:49:54,601 DEBUG [default] [SEGCORE][SetIndexSliceSize][] set config index slice size(byte): 16777216
+2025-11-15 14:49:54,601 DEBUG [default] [SEGCORE][SetThreadCoreCoefficient][] set thread pool core coefficient: 10
+2025-11-15 14:49:54,607 INFO [default] [KNOWHERE][SetBlasThreshold][] Set faiss::distance_compute_blas_threshold to 16384
+2025-11-15 14:49:54,607 INFO [default] [KNOWHERE][SetEarlyStopThreshold][] Set faiss::early_stop_threshold to 0
+2025-11-15 14:49:54,607 INFO [default] [KNOWHERE][SetStatisticsLevel][] Set knowhere::STATISTICS_LEVEL to 0
+2025-11-15 14:49:54,607 DEBUG [default] [SERVER][operator()][] Config easylogging with yaml file: F:\juese4_de\CS-5481-master\milvus_lite_data/configs/easylogging.yaml
+2025-11-15 14:49:54,607 DEBUG [default] [SEGCORE][SegcoreSetSimdType][] set config simd_type: auto
+2025-11-15 14:49:54,607 INFO [default] [KNOWHERE][SetSimdType][] FAISS expect simdType::AUTO
+2025-11-15 14:49:54,607 INFO [default] [KNOWHERE][SetSimdType][] FAISS hook REF
+2025-11-15 14:50:35,900 INFO [default] [KNOWHERE][SetBlasThreshold][] Set faiss::distance_compute_blas_threshold to 16384
+2025-11-15 14:50:35,900 INFO [default] [KNOWHERE][SetEarlyStopThreshold][] Set faiss::early_stop_threshold to 0
+2025-11-15 14:50:35,900 INFO [default] [KNOWHERE][SetStatisticsLevel][] Set knowhere::STATISTICS_LEVEL to 0
+2025-11-15 14:50:35,900 INFO [default] [KNOWHERE][SetBlasThreshold][] Set faiss::distance_compute_blas_threshold to 16384
+2025-11-15 14:50:35,900 INFO [default] [KNOWHERE][SetEarlyStopThreshold][] Set faiss::early_stop_threshold to 0
+2025-11-15 14:50:35,900 INFO [default] [KNOWHERE][SetStatisticsLevel][] Set knowhere::STATISTICS_LEVEL to 0
+2025-11-15 14:50:35,900 DEBUG [default] [SERVER][operator()][] Config easylogging with yaml file: F:\juese4_de\CS-5481-master\milvus_lite_data/configs/easylogging.yaml
+2025-11-15 14:50:35,901 INFO [default] [KNOWHERE][SetSimdType][] FAISS expect simdType::AUTO
+2025-11-15 14:50:35,901 INFO [default] [KNOWHERE][SetSimdType][] FAISS hook REF
+2025-11-15 14:50:35,901 DEBUG [default] [SEGCORE][SetIndexSliceSize][] set config index slice size(byte): 16777216
+2025-11-15 14:50:35,901 DEBUG [default] [SERVER][operator()][] Config easylogging with yaml file: F:\juese4_de\CS-5481-master\milvus_lite_data/configs/easylogging.yaml
+2025-11-15 14:50:35,901 DEBUG [default] [SEGCORE][SetThreadCoreCoefficient][] set thread pool core coefficient: 10
+2025-11-15 14:50:35,901 DEBUG [default] [SEGCORE][SegcoreSetSimdType][] set config simd_type: auto
+2025-11-15 14:50:35,901 INFO [default] [KNOWHERE][SetSimdType][] FAISS expect simdType::AUTO
+2025-11-15 14:50:35,901 INFO [default] [KNOWHERE][SetSimdType][] FAISS hook REF
+2025-11-15 14:58:32,682 INFO [default] [KNOWHERE][SetBlasThreshold][] Set faiss::distance_compute_blas_threshold to 16384
+2025-11-15 14:58:32,682 INFO [default] [KNOWHERE][SetEarlyStopThreshold][] Set faiss::early_stop_threshold to 0
+2025-11-15 14:58:32,682 INFO [default] [KNOWHERE][SetStatisticsLevel][] Set knowhere::STATISTICS_LEVEL to 0
+2025-11-15 14:58:32,682 DEBUG [default] [SERVER][operator()][] Config easylogging with yaml file: F:\juese4_de\CS-5481-master\milvus_lite_data/configs/easylogging.yaml
+2025-11-15 14:58:32,682 INFO [default] [KNOWHERE][SetSimdType][] FAISS expect simdType::AUTO
+2025-11-15 14:58:32,682 INFO [default] [KNOWHERE][SetSimdType][] FAISS hook REF
+2025-11-15 14:58:32,682 DEBUG [default] [SEGCORE][SetIndexSliceSize][] set config index slice size(byte): 16777216
+2025-11-15 14:58:32,682 DEBUG [default] [SEGCORE][SetThreadCoreCoefficient][] set thread pool core coefficient: 10
+2025-11-15 14:58:32,684 INFO [default] [KNOWHERE][SetBlasThreshold][] Set faiss::distance_compute_blas_threshold to 16384
+2025-11-15 14:58:32,684 INFO [default] [KNOWHERE][SetEarlyStopThreshold][] Set faiss::early_stop_threshold to 0
+2025-11-15 14:58:32,684 INFO [default] [KNOWHERE][SetStatisticsLevel][] Set knowhere::STATISTICS_LEVEL to 0
+2025-11-15 14:58:32,684 DEBUG [default] [SERVER][operator()][] Config easylogging with yaml file: F:\juese4_de\CS-5481-master\milvus_lite_data/configs/easylogging.yaml
+2025-11-15 14:58:32,684 DEBUG [default] [SEGCORE][SegcoreSetSimdType][] set config simd_type: auto
+2025-11-15 14:58:32,684 INFO [default] [KNOWHERE][SetSimdType][] FAISS expect simdType::AUTO
+2025-11-15 14:58:32,684 INFO [default] [KNOWHERE][SetSimdType][] FAISS hook REF
+2025-11-25 15:18:25,014 INFO [default] [KNOWHERE][SetBlasThreshold][] Set faiss::distance_compute_blas_threshold to 16384
+2025-11-25 15:18:25,015 INFO [default] [KNOWHERE][SetEarlyStopThreshold][] Set faiss::early_stop_threshold to 0
+2025-11-25 15:18:25,015 INFO [default] [KNOWHERE][SetStatisticsLevel][] Set knowhere::STATISTICS_LEVEL to 0
+2025-11-25 15:18:25,015 DEBUG [default] [SERVER][operator()][] Config easylogging with yaml file: C:\Users\Administrator\Desktop\CS-5481-master\milvus_lite_data/configs/easylogging.yaml
+2025-11-25 15:18:25,015 INFO [default] [KNOWHERE][SetSimdType][] FAISS expect simdType::AUTO
+2025-11-25 15:18:25,015 INFO [default] [KNOWHERE][SetSimdType][] FAISS hook REF
+2025-11-25 15:18:25,015 DEBUG [default] [SEGCORE][SetIndexSliceSize][] set config index slice size(byte): 16777216
+2025-11-25 15:18:25,015 DEBUG [default] [SEGCORE][SetThreadCoreCoefficient][] set thread pool core coefficient: 10
+2025-11-25 15:18:25,016 INFO [default] [KNOWHERE][SetBlasThreshold][] Set faiss::distance_compute_blas_threshold to 16384
+2025-11-25 15:18:25,016 INFO [default] [KNOWHERE][SetEarlyStopThreshold][] Set faiss::early_stop_threshold to 0
+2025-11-25 15:18:25,016 INFO [default] [KNOWHERE][SetStatisticsLevel][] Set knowhere::STATISTICS_LEVEL to 0
+2025-11-25 15:18:25,016 DEBUG [default] [SERVER][operator()][] Config easylogging with yaml file: C:\Users\Administrator\Desktop\CS-5481-master\milvus_lite_data/configs/easylogging.yaml
+2025-11-25 15:18:25,017 DEBUG [default] [SEGCORE][SegcoreSetSimdType][] set config simd_type: auto
+2025-11-25 15:18:25,017 INFO [default] [KNOWHERE][SetSimdType][] FAISS expect simdType::AUTO
+2025-11-25 15:18:25,017 INFO [default] [KNOWHERE][SetSimdType][] FAISS hook REF
+2025-11-25 15:18:32,565 INFO [default] [SEGCORE][N6milvus10ThreadPoolE::ThreadPool][] Thread pool's worker num:200
+2025-11-25 15:21:55,344 INFO [default] [KNOWHERE][SetBlasThreshold][] Set faiss::distance_compute_blas_threshold to 16384
+2025-11-25 15:21:55,344 INFO [default] [KNOWHERE][SetEarlyStopThreshold][] Set faiss::early_stop_threshold to 0
+2025-11-25 15:21:55,344 INFO [default] [KNOWHERE][SetStatisticsLevel][] Set knowhere::STATISTICS_LEVEL to 0
+2025-11-25 15:21:55,344 DEBUG [default] [SERVER][operator()][] Config easylogging with yaml file: C:\Users\Administrator\Desktop\CS-5481-master\milvus_lite_data/configs/easylogging.yaml
+2025-11-25 15:21:55,344 INFO [default] [KNOWHERE][SetBlasThreshold][] Set faiss::distance_compute_blas_threshold to 16384
+2025-11-25 15:21:55,344 INFO [default] [KNOWHERE][SetEarlyStopThreshold][] Set faiss::early_stop_threshold to 0
+2025-11-25 15:21:55,344 INFO [default] [KNOWHERE][SetStatisticsLevel][] Set knowhere::STATISTICS_LEVEL to 0
+2025-11-25 15:21:55,344 INFO [default] [KNOWHERE][SetSimdType][] FAISS expect simdType::AUTO
+2025-11-25 15:21:55,344 INFO [default] [KNOWHERE][SetSimdType][] FAISS hook REF
+2025-11-25 15:21:55,344 DEBUG [default] [SEGCORE][SetIndexSliceSize][] set config index slice size(byte): 16777216
+2025-11-25 15:21:55,344 DEBUG [default] [SEGCORE][SetThreadCoreCoefficient][] set thread pool core coefficient: 10
+2025-11-25 15:21:55,344 DEBUG [default] [SERVER][operator()][] Config easylogging with yaml file: C:\Users\Administrator\Desktop\CS-5481-master\milvus_lite_data/configs/easylogging.yaml
+2025-11-25 15:21:55,344 DEBUG [default] [SEGCORE][SegcoreSetSimdType][] set config simd_type: auto
+2025-11-25 15:21:55,344 INFO [default] [KNOWHERE][SetSimdType][] FAISS expect simdType::AUTO
+2025-11-25 15:21:55,344 INFO [default] [KNOWHERE][SetSimdType][] FAISS hook REF
+2025-11-25 15:22:03,875 INFO [default] [SEGCORE][N6milvus10ThreadPoolE::ThreadPool][] Thread pool's worker num:200
