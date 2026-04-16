@@ -1,0 +1,28 @@
+=== Failure Case Analysis (Exp3 PointNet++, first 500 test samples) ===
+
+Total failures : 51
+Error rate     : 10.2%
+
+Most misclassified ground-truth classes:
+  flower_pot          : 8 errors
+  night_stand         : 6 errors
+  tv_stand            : 6 errors
+  vase                : 5 errors
+  plant               : 5 errors
+  dresser             : 3 errors
+  table               : 3 errors
+  wardrobe            : 2 errors
+  xbox                : 2 errors
+  piano               : 2 errors
+
+Most common wrong predictions:
+  vase                : 7 times
+  table               : 5 times
+  flower_pot          : 5 times
+  night_stand         : 4 times
+  desk                : 4 times
+  plant               : 4 times
+  xbox                : 2 times
+  dresser             : 2 times
+  cup                 : 2 times
+  door                : 2 times
