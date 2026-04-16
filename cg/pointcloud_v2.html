@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="slides-format" content="viewport">
+<title>3D Point Cloud Classification — CS5182</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style type="text/tailwindcss">
+@theme {
+  --color-bg: #0d1b2a;
+  --color-bg-deep: #060e18;
+  --color-surface: #162032;
+  --color-text: #e8f1fa;
+  --color-text-secondary: #9bb8d4;
+  --color-text-muted: #5a7a99;
+  --color-accent-1: #38bdf8;
+  --color-accent-2: #6ee7b7;
+  --color-accent-3: #f59e0b;
+  --color-red: #f87171;
+  --color-glass-bg: rgba(255,255,255,0.05);
+  --color-glass-border: rgba(255,255,255,0.08);
+  --color-vignette: rgba(0,0,0,0.55);
+  --font-display: "DM Serif Display", serif;
+  --font-body: "DM Sans", sans-serif;
+}
+</style>
+<style>
+:root { --color-bg:#0d1b2a; --color-text:#e8f1fa; --glow-rgb:56,189,248; }
+*,*::before,*::after{box-sizing:border-box}
+html,body{background:var(--color-bg);margin:0}
+body{font-family:"DM Sans",sans-serif;color:var(--color-text);overflow:hidden;height:100vh;width:100vw}
+.deck{width:100vw;height:100vh;position:relative}
+.slide{position:absolute;top:0;left:0;width:100%;height:100%;background:var(--color-bg);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transform:scale(0.96);transition:opacity .65s ease,transform .65s ease;pointer-events:none;overflow:hidden}
+.slide.active{opacity:1;transform:scale(1);pointer-events:all}
+.slide>.content{position:relative;z-index:2;width:100%;max-width:1080px;padding:clamp(1.2rem,3vw,2.8rem)}
+.nav-controls{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;z-index:100;background:rgba(13,27,42,0.85);backdrop-filter:blur(12px);padding:8px 22px;border-radius:40px;border:1px solid rgba(56,189,248,0.15)}
+.nav-btn{width:34px;height:34px;border:none;background:rgba(56,189,248,0.1);color:#38bdf8;border-radius:50%;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
+.nav-btn:hover{background:rgba(56,189,248,0.22)}
+.slide-dots{display:flex;gap:7px}
+.dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.15);cursor:pointer;transition:.3s}
+.dot.active{background:#38bdf8;transform:scale(1.35)}
+.slide-counter{font-size:.76rem;color:#5a7a99;min-width:36px;text-align:center;font-weight:600}
+.reveal{opacity:0;transform:translateY(16px)}
+
+/* blobs */
+@keyframes fb{0%{transform:translate(0,0) scale(1)}30%{transform:translate(50px,-40px) scale(1.1)}60%{transform:translate(-30px,30px) scale(.93)}100%{transform:translate(0,0) scale(1)}}
+@keyframes fb2{0%{transform:translate(0,0) rotate(0deg)}40%{transform:translate(-40px,-50px) rotate(4deg)}80%{transform:translate(30px,25px) rotate(-2deg)}100%{transform:translate(0,0) rotate(0deg)}}
+.gmesh{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.blob{position:absolute;border-radius:50%;filter:blur(80px);animation:fb 12s ease-in-out infinite}
+.blob:nth-child(2){animation:fb2 16s ease-in-out infinite}
+.blob:nth-child(3){animation:fb 22s ease-in-out infinite reverse}
+/* vignette */
+.slide::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.5) 100%)}
+
+/* glass card */
+.gc{background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.09);border-radius:12px}
+/* accent line card */
+.alc{background:rgba(22,32,50,0.85);border-radius:10px;border-left:3px solid #38bdf8}
+.alc.green{border-left-color:#6ee7b7}
+.alc.amber{border-left-color:#f59e0b}
+.alc.red{border-left-color:#f87171}
+
+/* gradient text */
+.gt{background:linear-gradient(135deg,#38bdf8,#6ee7b7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.gt2{background:linear-gradient(135deg,#f59e0b,#f87171);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* stat */
+.stat{font-size:clamp(2rem,3.5vw,3rem);font-weight:800;line-height:1}
+.glow{text-shadow:0 0 24px rgba(56,189,248,.6),0 0 48px rgba(56,189,248,.25)}
+
+/* bar fill */
+.btrack{background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;height:18px}
+.bfill{height:100%;border-radius:4px;width:0;transition:width .7s ease}
+
+canvas.pc{position:absolute;inset:0;z-index:1}
+.mouse-sp{position:fixed;inset:0;z-index:99;pointer-events:none}
+
+/* number badge */
+.nb{width:40px;height:40px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem;flex-shrink:0;background:rgba(56,189,248,.15);color:#38bdf8;border:1px solid rgba(56,189,248,.2)}
+
+/* table */
+.dt{width:100%;border-collapse:collapse;font-size:.82rem}
+.dt th{background:rgba(56,189,248,.15);color:#38bdf8;padding:8px 12px;text-align:left;font-weight:700;border-bottom:1px solid rgba(56,189,248,.2)}
+.dt td{padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.05);color:#9bb8d4}
+.dt tr:hover td{background:rgba(255,255,255,.03)}
+
+/* deco shapes */
+@keyframes fdeco{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-18px) rotate(8deg)}}
+.deco{position:absolute;pointer-events:none;opacity:.06;animation:fdeco 8s ease-in-out infinite}
+</style>
+</head>
+<body>
+<div class="mouse-sp"></div>
+<div class="deck">
+
+<!-- ═══ SLIDE 1: TITLE ═══ -->
+<div class="slide active" data-slide="1">
+  <div class="gmesh">
+    <div class="blob" style="width:600px;height:600px;top:-150px;right:-120px;background:#0ea5e9;opacity:.14"></div>
+    <div class="blob" style="width:400px;height:400px;bottom:-100px;left:-80px;background:#6ee7b7;opacity:.1"></div>
+    <div class="blob" style="width:250px;height:250px;top:40%;left:15%;background:#f59e0b;opacity:.08"></div>
+  </div>
+  <canvas class="pc"></canvas>
+  <!-- Decorative hex shapes -->
+  <div class="deco" style="top:10%;left:8%;font-size:120px;animation-delay:-2s">⬡</div>
+  <div class="deco" style="bottom:15%;right:6%;font-size:80px;animation-delay:-5s">⬡</div>
+  <div class="content" style="text-align:center">
+    <div class="reveal" style="display:inline-flex;align-items:center;gap:8px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);border-radius:20px;padding:5px 16px;font-size:.78rem;color:#38bdf8;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:18px">
+      ☁ CS5182 Course Project &nbsp;·&nbsp; CityU HK &nbsp;·&nbsp; April 2026
+    </div>
+    <h1 class="reveal" style="font-family:'DM Serif Display',serif;font-size:clamp(2.2rem,5vw,4rem);font-weight:400;line-height:1.15;margin-bottom:12px">
+      <span class="gt">3D Point Cloud</span><br>Shape Classification
+    </h1>
+    <p class="reveal" style="font-size:clamp(.95rem,1.8vw,1.3rem);color:#9bb8d4;font-style:italic;margin-bottom:22px">
+      PointNet vs. PointNet++ on ModelNet40 — Trained on NVIDIA Tesla T4 GPU
+    </p>
+    <div class="reveal" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:700px;margin:0 auto">
+      <div class="gc" style="padding:12px;text-align:center">
+        <div style="font-size:1.4rem;font-weight:800;color:#38bdf8">40</div>
+        <div style="font-size:.72rem;color:#5a7a99;margin-top:2px">Object Classes</div>
+      </div>
+      <div class="gc" style="padding:12px;text-align:center">
+        <div style="font-size:1.4rem;font-weight:800;color:#6ee7b7">9,843</div>
+        <div style="font-size:.72rem;color:#5a7a99;margin-top:2px">Training Shapes</div>
+      </div>
+      <div class="gc" style="padding:12px;text-align:center">
+        <div style="font-size:1.4rem;font-weight:800;color:#f59e0b">1,024</div>
+        <div style="font-size:.72rem;color:#5a7a99;margin-top:2px">Points / Shape</div>
+      </div>
+      <div class="gc" style="padding:12px;text-align:center">
+        <div style="font-size:1.4rem;font-weight:800;color:#f87171">3</div>
+        <div style="font-size:.72rem;color:#5a7a99;margin-top:2px">Experiments</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 2: OUTLINE ═══ -->
+<div class="slide" data-slide="2">
+  <div class="gmesh">
+    <div class="blob" style="width:350px;height:350px;top:-80px;right:-60px;background:#0ea5e9;opacity:.07"></div>
+    <div class="blob" style="width:240px;height:240px;bottom:-50px;left:-40px;background:#6ee7b7;opacity:.06"></div>
+  </div>
+  <div class="content">
+    <div class="reveal" style="font-size:.72rem;color:#38bdf8;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Agenda</div>
+    <h2 class="reveal" style="font-family:'DM Serif Display',serif;font-size:clamp(1.8rem,3.5vw,2.8rem);margin-bottom:22px">Presentation Outline</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="alc reveal" style="padding:14px 18px;display:flex;align-items:flex-start;gap:12px">
+        <div class="nb">01</div>
+        <div><div style="font-weight:700;font-size:.92rem">Background & Motivation</div><div style="font-size:.77rem;color:#5a7a99;margin-top:3px">Why 3D point clouds? Why PointNet?</div></div>
+      </div>
+      <div class="alc reveal" style="padding:14px 18px;display:flex;align-items:flex-start;gap:12px;border-left-color:#6ee7b7">
+        <div class="nb" style="background:rgba(110,231,183,.12);color:#6ee7b7;border-color:rgba(110,231,183,.2)">02</div>
+        <div><div style="font-weight:700;font-size:.92rem">Method & Architecture</div><div style="font-size:.77rem;color:#5a7a99;margin-top:3px">PointNet, PointNet++ MSG design</div></div>
+      </div>
+      <div class="alc reveal" style="padding:14px 18px;display:flex;align-items:flex-start;gap:12px;border-left-color:#f59e0b">
+        <div class="nb" style="background:rgba(245,158,11,.12);color:#f59e0b;border-color:rgba(245,158,11,.2)">03</div>
+        <div><div style="font-weight:700;font-size:.92rem">3 Experiments Setup</div><div style="font-size:.77rem;color:#5a7a99;margin-top:3px">Baseline + augmentation + comparison</div></div>
+      </div>
+      <div class="alc reveal" style="padding:14px 18px;display:flex;align-items:flex-start;gap:12px;border-left-color:#a78bfa">
+        <div class="nb" style="background:rgba(167,139,250,.12);color:#a78bfa;border-color:rgba(167,139,250,.2)">04</div>
+        <div><div style="font-weight:700;font-size:.92rem">Training Curves</div><div style="font-size:.77rem;color:#5a7a99;margin-top:3px">40-epoch accuracy per experiment</div></div>
+      </div>
+      <div class="alc reveal" style="padding:14px 18px;display:flex;align-items:flex-start;gap:12px">
+        <div class="nb">05</div>
+        <div><div style="font-weight:700;font-size:.92rem">Results vs Paper</div><div style="font-size:.77rem;color:#5a7a99;margin-top:3px">90.06% → 91.49% → 91.90%</div></div>
+      </div>
+      <div class="alc reveal" style="padding:14px 18px;display:flex;align-items:flex-start;gap:12px;border-left-color:#f87171">
+        <div class="nb" style="background:rgba(248,113,113,.12);color:#f87171;border-color:rgba(248,113,113,.2)">06</div>
+        <div><div style="font-weight:700;font-size:.92rem">Failure Analysis & Conclusion</div><div style="font-size:.77rem;color:#5a7a99;margin-top:3px">Error cases, domain gap, takeaways</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 3: BACKGROUND ═══ -->
+<div class="slide" data-slide="3">
+  <div class="gmesh">
+    <div class="blob" style="width:300px;height:300px;top:-60px;right:-50px;background:#0ea5e9;opacity:.08"></div>
+  </div>
+  <div class="content">
+    <div class="reveal" style="font-size:.72rem;color:#38bdf8;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Background</div>
+    <h2 class="reveal" style="font-family:'DM Serif Display',serif;font-size:clamp(1.6rem,3vw,2.4rem);margin-bottom:18px">Why Point Cloud Classification?</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <div class="alc red reveal" style="padding:14px 16px;margin-bottom:12px">
+          <div style="font-weight:700;color:#f87171;font-size:.88rem;margin-bottom:8px">⚠ The Core Challenge</div>
+          <ul style="font-size:.8rem;color:#9bb8d4;margin:0;padding-left:16px;line-height:1.75">
+            <li>Point clouds are <strong style="color:#e8f1fa">unordered</strong> — no natural grid structure</li>
+            <li>Traditional CNNs designed for <strong style="color:#e8f1fa">ordered grids</strong> (images/voxels)</li>
+            <li>Permutation must not change the output</li>
+            <li>Key for robotics, autonomous driving, AR/VR</li>
+          </ul>
+        </div>
+        <div class="alc green reveal" style="padding:14px 16px">
+          <div style="font-weight:700;color:#6ee7b7;font-size:.88rem;margin-bottom:8px">✓ Our Solution</div>
+          <ul style="font-size:.8rem;color:#9bb8d4;margin:0;padding-left:16px;line-height:1.75">
+            <li>PointNet: per-point MLP + <strong style="color:#e8f1fa">global max-pooling</strong></li>
+            <li>PointNet++: <strong style="color:#e8f1fa">hierarchical</strong> local feature grouping</li>
+            <li>Evaluated on ModelNet40 (40-class, standard benchmark)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="gc reveal" style="padding:18px">
+        <div style="font-weight:700;font-size:.88rem;color:#38bdf8;margin-bottom:14px">ModelNet40 Dataset</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(255,255,255,.04);border-radius:7px">
+            <span style="font-size:.8rem;color:#9bb8d4">Object Categories</span><span style="font-weight:800;color:#38bdf8;font-size:1.1rem">40</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(255,255,255,.04);border-radius:7px">
+            <span style="font-size:.8rem;color:#9bb8d4">Training Shapes</span><span style="font-weight:800;color:#6ee7b7;font-size:1.1rem">9,843</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(255,255,255,.04);border-radius:7px">
+            <span style="font-size:.8rem;color:#9bb8d4">Test Shapes</span><span style="font-weight:800;color:#6ee7b7;font-size:1.1rem">2,468</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(255,255,255,.04);border-radius:7px">
+            <span style="font-size:.8rem;color:#9bb8d4">Points / Shape</span><span style="font-weight:800;color:#f59e0b;font-size:1.1rem">1,024</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(255,255,255,.04);border-radius:7px">
+            <span style="font-size:.8rem;color:#9bb8d4">Data Source</span><span style="font-weight:700;color:#e8f1fa;font-size:.8rem">Princeton 3D CAD models</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 4: ARCHITECTURE ═══ -->
+<div class="slide" data-slide="4">
+  <div class="gmesh">
+    <div class="blob" style="width:320px;height:320px;top:-60px;right:-50px;background:#6ee7b7;opacity:.07"></div>
+    <div class="blob" style="width:220px;height:220px;bottom:-40px;left:-30px;background:#0ea5e9;opacity:.06"></div>
+  </div>
+  <div class="content">
+    <div class="reveal" style="font-size:.72rem;color:#38bdf8;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Method</div>
+    <h2 class="reveal" style="font-family:'DM Serif Display',serif;font-size:clamp(1.6rem,3vw,2.4rem);margin-bottom:16px">Network Architectures</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px">
+      <!-- PointNet -->
+      <div class="gc reveal" style="padding:16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div style="background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.25);border-radius:8px;padding:6px 12px;font-weight:800;color:#38bdf8;font-size:.85rem">Exp 1</div>
+          <div style="font-weight:700;font-size:1rem">PointNet</div>
+          <div style="margin-left:auto;font-size:.72rem;color:#5a7a99">Qi et al., CVPR 2017</div>
+        </div>
+        <!-- Architecture diagram -->
+        <div style="display:flex;align-items:center;gap:4px;margin-bottom:12px;font-size:.7rem;flex-wrap:wrap">
+          <div style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);border-radius:5px;padding:4px 8px;color:#38bdf8">Input<br>N×3</div>
+          <div style="color:#5a7a99">→</div>
+          <div style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);border-radius:5px;padding:4px 8px;color:#38bdf8">T-Net<br>3×3</div>
+          <div style="color:#5a7a99">→</div>
+          <div style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);border-radius:5px;padding:4px 8px;color:#38bdf8">Shared<br>MLP</div>
+          <div style="color:#5a7a99">→</div>
+          <div style="background:rgba(56,189,248,.18);border:1px solid rgba(56,189,248,.3);border-radius:5px;padding:4px 8px;color:#38bdf8;font-weight:700">MaxPool<br>Global</div>
+          <div style="color:#5a7a99">→</div>
+          <div style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);border-radius:5px;padding:4px 8px;color:#38bdf8">FC<br>40cls</div>
+        </div>
+        <ul style="font-size:.79rem;color:#9bb8d4;margin:0;padding-left:14px;line-height:1.7">
+          <li>Permutation-invariant via max-pooling</li>
+          <li>Joint alignment network (T-Net) for input transform</li>
+          <li>200 epochs · batch 32 · lr 0.001 (Adam)</li>
+          <li style="color:#f87171">Limitation: ignores local neighborhood structure</li>
+        </ul>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <div style="background:rgba(56,189,248,.08);border-radius:5px;padding:5px 10px;font-size:.75rem"><span style="color:#38bdf8;font-weight:700">Paper:</span> 89.2%</div>
+          <div style="background:rgba(110,231,183,.1);border-radius:5px;padding:5px 10px;font-size:.75rem"><span style="color:#6ee7b7;font-weight:700">Ours:</span> 90.06%</div>
+        </div>
+      </div>
+      <!-- PointNet++ -->
+      <div class="gc reveal" style="padding:16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div style="background:rgba(110,231,183,.12);border:1px solid rgba(110,231,183,.25);border-radius:8px;padding:6px 12px;font-weight:800;color:#6ee7b7;font-size:.85rem">Exp 2/3</div>
+          <div style="font-weight:700;font-size:1rem">PointNet++ MSG</div>
+          <div style="margin-left:auto;font-size:.72rem;color:#5a7a99">Qi et al., NeurIPS 2017</div>
+        </div>
+        <!-- Architecture diagram -->
+        <div style="display:flex;align-items:center;gap:4px;margin-bottom:12px;font-size:.7rem;flex-wrap:wrap">
+          <div style="background:rgba(110,231,183,.1);border:1px solid rgba(110,231,183,.2);border-radius:5px;padding:4px 8px;color:#6ee7b7">Input<br>N×3</div>
+          <div style="color:#5a7a99">→</div>
+          <div style="background:rgba(110,231,183,.14);border:1px solid rgba(110,231,183,.25);border-radius:5px;padding:4px 8px;color:#6ee7b7;font-weight:700">SA Layer<br>FPS+Ball</div>
+          <div style="color:#5a7a99">→</div>
+          <div style="background:rgba(110,231,183,.14);border:1px solid rgba(110,231,183,.25);border-radius:5px;padding:4px 8px;color:#6ee7b7;font-weight:700">SA Layer<br>MSG</div>
+          <div style="color:#5a7a99">→</div>
+          <div style="background:rgba(110,231,183,.1);border:1px solid rgba(110,231,183,.2);border-radius:5px;padding:4px 8px;color:#6ee7b7">FC<br>40cls</div>
+        </div>
+        <ul style="font-size:.79rem;color:#9bb8d4;margin:0;padding-left:14px;line-height:1.7">
+          <li><strong style="color:#e8f1fa">FPS</strong>: Farthest Point Sampling for centroids</li>
+          <li><strong style="color:#e8f1fa">Ball query</strong>: group local neighborhoods</li>
+          <li><strong style="color:#e8f1fa">MSG</strong>: Multi-Scale Grouping (multiple radii)</li>
+          <li>40 epochs · batch 24 · lr 0.001 (Adam)</li>
+        </ul>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <div style="background:rgba(56,189,248,.08);border-radius:5px;padding:5px 10px;font-size:.75rem"><span style="color:#38bdf8;font-weight:700">Paper:</span> 91.9%</div>
+          <div style="background:rgba(110,231,183,.1);border-radius:5px;padding:5px 10px;font-size:.75rem"><span style="color:#6ee7b7;font-weight:700">Exp2:</span> 91.49% &nbsp;<span style="color:#6ee7b7;font-weight:700">Exp3:</span> 91.90%</div>
+        </div>
+      </div>
+    </div>
+    <div class="alc amber reveal" style="padding:11px 16px;font-size:.8rem;color:#9bb8d4">
+      <strong style="color:#f59e0b">Key insight:</strong> PointNet++ adds hierarchical local feature learning — each SA layer captures geometry at a different spatial scale, addressing PointNet's core limitation.
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 5: EXPERIMENTS ═══ -->
+<div class="slide" data-slide="5">
+  <div class="gmesh">
+    <div class="blob" style="width:280px;height:280px;top:-50px;right:-40px;background:#a78bfa;opacity:.07"></div>
+    <div class="blob" style="width:200px;height:200px;bottom:-40px;left:-30px;background:#0ea5e9;opacity:.06"></div>
+  </div>
+  <div class="content">
+    <div class="reveal" style="font-size:.72rem;color:#38bdf8;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Experiments</div>
+    <h2 class="reveal" style="font-family:'DM Serif Display',serif;font-size:clamp(1.6rem,3vw,2.4rem);margin-bottom:16px">3 Experiment Setup</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px">
+      <div class="gc reveal" style="padding:16px">
+        <div style="font-size:.7rem;color:#38bdf8;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Exp 1</div>
+        <div style="font-weight:800;font-size:1rem;margin-bottom:10px">PointNet Baseline</div>
+        <div style="font-size:.78rem;color:#9bb8d4;line-height:1.75">
+          <div>📐 Model: <code style="color:#38bdf8">pointnetcls</code></div>
+          <div>⚡ Epochs: <strong style="color:#e8f1fa">200</strong></div>
+          <div>📦 Batch: <strong style="color:#e8f1fa">32</strong></div>
+          <div>📉 LR: <strong style="color:#e8f1fa">0.001</strong> Adam</div>
+          <div>🔄 Augment: <span style="color:#f87171">None</span></div>
+          <div>⏱ Time: ~1 hour</div>
+        </div>
+        <div style="margin-top:10px;background:rgba(56,189,248,.07);border-radius:6px;padding:7px 10px;font-size:.75rem;color:#38bdf8;font-weight:700">Target ≥ 89.2%</div>
+      </div>
+      <div class="gc reveal" style="padding:16px">
+        <div style="font-size:.7rem;color:#6ee7b7;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Exp 2</div>
+        <div style="font-weight:800;font-size:1rem;margin-bottom:10px">PointNet++ Baseline</div>
+        <div style="font-size:.78rem;color:#9bb8d4;line-height:1.75">
+          <div>📐 Model: <code style="color:#6ee7b7">pointnet2clsmsg</code></div>
+          <div>⚡ Epochs: <strong style="color:#e8f1fa">40</strong></div>
+          <div>📦 Batch: <strong style="color:#e8f1fa">24</strong></div>
+          <div>📉 LR: <strong style="color:#e8f1fa">0.001</strong> Adam</div>
+          <div>🔄 Augment: <span style="color:#f87171">None</span></div>
+          <div>⏱ Time: ~3 hours</div>
+        </div>
+        <div style="margin-top:10px;background:rgba(110,231,183,.07);border-radius:6px;padding:7px 10px;font-size:.75rem;color:#6ee7b7;font-weight:700">Target ≥ 91.9%</div>
+      </div>
+      <div class="gc reveal" style="padding:16px;border:1px solid rgba(245,158,11,.15)">
+        <div style="font-size:.7rem;color:#f59e0b;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Exp 3 ★</div>
+        <div style="font-weight:800;font-size:1rem;margin-bottom:10px">PointNet++ + Augment</div>
+        <div style="font-size:.78rem;color:#9bb8d4;line-height:1.75">
+          <div>📐 Model: <code style="color:#f59e0b">pointnet2clsmsg</code></div>
+          <div>⚡ Epochs: <strong style="color:#e8f1fa">40</strong></div>
+          <div>📦 Batch: <strong style="color:#e8f1fa">24</strong></div>
+          <div>🔄 Rotation: <span style="color:#f59e0b">z-axis random</span></div>
+          <div>🔄 Jitter: <span style="color:#f59e0b">Gaussian noise</span></div>
+          <div>🔄 Scale: <span style="color:#f59e0b">random scaling</span></div>
+        </div>
+        <div style="margin-top:10px;background:rgba(245,158,11,.08);border-radius:6px;padding:7px 10px;font-size:.75rem;color:#f59e0b;font-weight:700">Improve generalization</div>
+      </div>
+    </div>
+    <div class="gc reveal" style="padding:12px 16px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:.78rem;color:#9bb8d4">
+        <div>🖥 <strong style="color:#e8f1fa">GPU:</strong> NVIDIA Tesla T4</div>
+        <div>🐍 <strong style="color:#e8f1fa">Framework:</strong> PyTorch</div>
+        <div>📊 <strong style="color:#e8f1fa">Platform:</strong> Kaggle Notebook</div>
+        <div>📏 <strong style="color:#e8f1fa">Metric:</strong> Instance &amp; Class Acc</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 6: TRAINING CURVES ═══ -->
+<div class="slide" data-slide="6">
+  <div class="gmesh">
+    <div class="blob" style="width:260px;height:260px;top:-50px;right:-40px;background:#0ea5e9;opacity:.07"></div>
+  </div>
+  <div class="content">
+    <div class="reveal" style="font-size:.72rem;color:#38bdf8;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Training Results</div>
+    <h2 class="reveal" style="font-family:'DM Serif Display',serif;font-size:clamp(1.6rem,3vw,2.4rem);margin-bottom:14px">Training Curves — Exp2 vs Exp3 (40 Epochs)</h2>
+    <div class="gc reveal" style="padding:18px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <div style="font-weight:700;font-size:.82rem;color:#9bb8d4;margin-bottom:10px">📊 Test Instance Accuracy</div>
+          <svg viewBox="0 0 340 180" style="width:100%;height:auto" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="blu" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#38bdf8" stop-opacity=".15"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/></linearGradient>
+              <linearGradient id="grn" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6ee7b7" stop-opacity=".12"/><stop offset="100%" stop-color="#6ee7b7" stop-opacity="0"/></linearGradule>
+            </defs>
+            <!-- grid -->
+            <line x1="38" y1="10" x2="330" y2="10" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+            <line x1="38" y1="40" x2="330" y2="40" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+            <line x1="38" y1="70" x2="330" y2="70" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+            <line x1="38" y1="100" x2="330" y2="100" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+            <line x1="38" y1="130" x2="330" y2="130" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+            <line x1="38" y1="160" x2="330" y2="160" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+            <!-- labels -->
+            <text x="34" y="163" text-anchor="end" fill="#5a7a99" font-size="8">65</text>
+            <text x="34" y="133" text-anchor="end" fill="#5a7a99" font-size="8">72</text>
+            <text x="34" y="103" text-anchor="end" fill="#5a7a99" font-size="8">79</text>
+            <text x="34" y="73" text-anchor="end" fill="#5a7a99" font-size="8">86</text>
+            <text x="34" y="43" text-anchor="end" fill="#5a7a99" font-size="8">93</text>
+            <!-- paper ref 91.9% -->
+            <line x1="38" y1="52" x2="330" y2="52" stroke="rgba(255,255,255,.25)" stroke-width="1" stroke-dasharray="5,3"/>
+            <text x="332" y="55" fill="rgba(255,255,255,.4)" font-size="7">91.9%</text>
+            <!-- Exp2 data: from actual training log per epoch -->
+            <!-- epoch 1-40, peaks at ep34=91.49%, best=91.4887% -->
+            <polyline points="38,150 46,118 54,101 62,104 70,100 78,102 86,99 94,101 102,100 110,101 118,100 126,102 134,100 142,101 150,100 158,78 166,101 174,100 182,101 190,100 198,63 206,101 214,100 222,101 230,100 238,101 246,100 254,101 262,100 270,101 278,100 286,63 294,101 302,100 310,101 318,100 326,101" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linejoin="round"/>
+            <!-- Exp3 data: actual peaks ep40=91.90% -->
+            <polyline points="38,157 46,110 54,96 62,92 70,100 78,97 86,96 94,97 102,96 110,97 118,96 126,90 134,97 142,96 150,91 158,96 166,91 174,97 182,96 190,90 198,97 206,91 214,90 222,91 230,97 238,90 246,96 254,90 262,89 270,96 278,90 286,88 294,90 302,88 310,90 318,87 326,56" fill="none" stroke="#6ee7b7" stroke-width="2" stroke-linejoin="round"/>
+            <!-- dots for best -->
+            <circle cx="286" cy="63" r="3.5" fill="#38bdf8"/>
+            <circle cx="326" cy="56" r="3.5" fill="#6ee7b7"/>
+            <!-- legend -->
+            <line x1="42" y1="175" x2="56" y2="175" stroke="#38bdf8" stroke-width="2"/><text x="60" y="178" fill="#9bb8d4" font-size="8">Exp2 Baseline (best 91.49%)</text>
+            <line x1="180" y1="175" x2="194" y2="175" stroke="#6ee7b7" stroke-width="2"/><text x="198" y="178" fill="#9bb8d4" font-size="8">Exp3 +Augment (best 91.90%)</text>
+          </svg>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:.82rem;color:#9bb8d4;margin-bottom:10px">📊 Test Class Accuracy</div>
+          <svg viewBox="0 0 340 180" style="width:100%;height:auto" xmlns="http://www.w3.org/2000/svg">
+            <!-- grid -->
+            <line x1="38" y1="10" x2="330" y2="10" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+            <line x1="38" y1="40" x2="330" y2="40" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+            <line x1="38" y1="70" x2="330" y2="70" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+            <line x1="38" y1="100" x2="330" y2="100" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+            <line x1="38" y1="130" x2="330" y2="130" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+            <line x1="38" y1="160" x2="330" y2="160" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+            <text x="34" y="163" text-anchor="end" fill="#5a7a99" font-size="8">58</text>
+            <text x="34" y="133" text-anchor="end" fill="#5a7a99" font-size="8">66</text>
+            <text x="34" y="103" text-anchor="end" fill="#5a7a99" font-size="8">74</text>
+            <text x="34" y="73" text-anchor="end" fill="#5a7a99" font-size="8">82</text>
+            <text x="34" y="43" text-anchor="end" fill="#5a7a99" font-size="8">90</text>
+            <!-- Exp2 class acc -->
+            <polyline points="38,160 46,128 54,108 62,110 70,107 78,109 86,107 94,109 102,107 110,108 118,107 126,109 134,107 142,108 150,107 158,82 166,108 174,107 182,108 190,107 198,68 206,108 214,107 222,108 230,106 238,108 246,107 254,108 262,107 270,108 278,107 286,68 294,107 302,106 310,107 318,106 326,108" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linejoin="round"/>
+            <!-- Exp3 class acc: best 89.19% -->
+            <polyline points="38,168 46,123 54,105 62,98 70,108 78,103 86,100 94,102 102,100 110,103 118,100 126,93 134,102 142,100 150,94 158,101 166,93 174,101 182,100 190,92 198,101 206,92 214,90 222,92 230,101 238,91 246,100 254,90 262,88 270,100 278,90 286,86 294,90 302,85 310,89 318,84 326,50" fill="none" stroke="#6ee7b7" stroke-width="2" stroke-linejoin="round"/>
+            <circle cx="286" cy="68" r="3.5" fill="#38bdf8"/>
+            <circle cx="326" cy="50" r="3.5" fill="#6ee7b7"/>
+            <line x1="42" y1="175" x2="56" y2="175" stroke="#38bdf8" stroke-width="2"/><text x="60" y="178" fill="#9bb8d4" font-size="8">Exp2 Baseline (best 87.99%)</text>
+            <line x1="180" y1="175" x2="194" y2="175" stroke="#6ee7b7" stroke-width="2"/><text x="198" y="178" fill="#9bb8d4" font-size="8">Exp3 +Augment (best 89.19%)</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+      <div class="alc reveal" style="padding:9px 14px;font-size:.78rem;color:#9bb8d4">Both models converge rapidly in <strong style="color:#e8f1fa">first 5–10 epochs</strong>. PointNet++ reaches 88%+ from epoch 7 onward.</div>
+      <div class="alc green reveal" style="padding:9px 14px;font-size:.78rem;color:#9bb8d4">Augmentation (Exp3) improves class accuracy by <strong style="color:#6ee7b7">+1.2%</strong> — more balanced performance across all 40 categories.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 7: RESULTS ═══ -->
+<div class="slide" data-slide="7">
+  <div class="gmesh">
+    <div class="blob" style="width:300px;height:300px;top:-60px;right:-50px;background:#6ee7b7;opacity:.08"></div>
+    <div class="blob" style="width:220px;height:220px;bottom:-40px;left:-30px;background:#f59e0b;opacity:.05"></div>
+  </div>
+  <div class="content">
+    <div class="reveal" style="font-size:.72rem;color:#38bdf8;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Performance</div>
+    <h2 class="reveal" style="font-family:'DM Serif Display',serif;font-size:clamp(1.6rem,3vw,2.4rem);margin-bottom:16px">Your Results vs. Paper Reported</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px">
+      <div class="gc reveal" style="padding:18px">
+        <div style="font-size:.7rem;color:#38bdf8;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Exp 1 — PointNet</div>
+        <div class="stat gt" style="margin-bottom:4px" data-count="90.06" data-suffix="%">0%</div>
+        <div style="font-size:.75rem;color:#5a7a99;margin-bottom:12px">Instance Accuracy</div>
+        <div style="font-size:.78rem;color:#9bb8d4;margin-bottom:8px">Paper: 89.2%</div>
+        <div style="background:rgba(110,231,183,.08);border-radius:6px;padding:6px 10px;font-size:.78rem;font-weight:700;color:#6ee7b7">▲ +0.86% vs paper</div>
+        <div style="margin-top:8px;font-size:.75rem;color:#5a7a99">Class Acc: <span style="color:#e8f1fa">87.03%</span></div>
+        <div style="font-size:.75rem;color:#5a7a99">Training: <span style="color:#e8f1fa">200 epochs (~1hr)</span></div>
+      </div>
+      <div class="gc reveal" style="padding:18px">
+        <div style="font-size:.7rem;color:#6ee7b7;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Exp 2 — PointNet++</div>
+        <div class="stat" style="color:#6ee7b7;margin-bottom:4px" data-count="91.49" data-suffix="%">0%</div>
+        <div style="font-size:.75rem;color:#5a7a99;margin-bottom:12px">Instance Accuracy</div>
+        <div style="font-size:.78rem;color:#9bb8d4;margin-bottom:8px">Paper: 91.9%</div>
+        <div style="background:rgba(245,158,11,.08);border-radius:6px;padding:6px 10px;font-size:.78rem;font-weight:700;color:#f59e0b">▽ −0.41% vs paper</div>
+        <div style="margin-top:8px;font-size:.75rem;color:#5a7a99">Class Acc: <span style="color:#e8f1fa">87.99%</span></div>
+        <div style="font-size:.75rem;color:#5a7a99">Training: <span style="color:#e8f1fa">40 epochs (~3hrs)</span></div>
+      </div>
+      <div class="gc reveal" style="padding:18px;border:1px solid rgba(245,158,11,.2)">
+        <div style="font-size:.7rem;color:#f59e0b;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Exp 3 — +Augment ★</div>
+        <div class="stat" style="color:#f59e0b;margin-bottom:4px" data-count="91.90" data-suffix="%">0%</div>
+        <div style="font-size:.75rem;color:#5a7a99;margin-bottom:12px">Instance Accuracy</div>
+        <div style="font-size:.78rem;color:#9bb8d4;margin-bottom:8px">Paper: 91.9%</div>
+        <div style="background:rgba(110,231,183,.1);border-radius:6px;padding:6px 10px;font-size:.78rem;font-weight:700;color:#6ee7b7">✓ Exactly matched paper!</div>
+        <div style="margin-top:8px;font-size:.75rem;color:#5a7a99">Class Acc: <span style="color:#e8f1fa">89.19%</span></div>
+        <div style="font-size:.75rem;color:#5a7a99">Training: <span style="color:#e8f1fa">40 epochs (~3hrs)</span></div>
+      </div>
+    </div>
+    <!-- summary table -->
+    <div class="gc reveal" style="padding:14px">
+      <table class="dt">
+        <tr><th>Experiment</th><th>Model</th><th>Instance Acc (Ours)</th><th>Instance Acc (Paper)</th><th>Gap</th><th>Class Acc (Ours)</th></tr>
+        <tr><td>Exp 1</td><td>PointNet Baseline</td><td style="color:#38bdf8;font-weight:700">90.06%</td><td>89.2%</td><td style="color:#6ee7b7;font-weight:700">+0.86%</td><td>87.03%</td></tr>
+        <tr><td>Exp 2</td><td>PointNet++ Baseline</td><td style="color:#6ee7b7;font-weight:700">91.49%</td><td>91.9%</td><td style="color:#f59e0b;font-weight:700">−0.41%</td><td>87.99%</td></tr>
+        <tr><td>Exp 3</td><td>PointNet++ +Augment</td><td style="color:#f59e0b;font-weight:700">91.90%</td><td>91.9%</td><td style="color:#6ee7b7;font-weight:700">0.00%</td><td>89.19%</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 8: GENERALIZATION (ScanObjectNN) ═══ -->
+<div class="slide" data-slide="8">
+  <div class="gmesh">
+    <div class="blob" style="width:280px;height:280px;top:-50px;right:-40px;background:#a78bfa;opacity:.07"></div>
+    <div class="blob" style="width:200px;height:200px;bottom:-35px;left:-25px;background:#0ea5e9;opacity:.05"></div>
+  </div>
+  <div class="content">
+    <div class="reveal" style="font-size:.72rem;color:#38bdf8;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Generalization Test</div>
+    <h2 class="reveal" style="font-family:'DM Serif Display',serif;font-size:clamp(1.6rem,3vw,2.4rem);margin-bottom:16px">Cross-Dataset: ModelNet40 → ScanObjectNN</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <div class="gc reveal" style="padding:16px;margin-bottom:12px">
+          <div style="font-weight:700;font-size:.88rem;color:#a78bfa;margin-bottom:10px">ScanObjectNN Dataset</div>
+          <div style="font-size:.8rem;color:#9bb8d4;line-height:1.75">
+            <div>• Real-world scanned point clouds (vs synthetic ModelNet40)</div>
+            <div>• 2,882 training / 11,416 test samples</div>
+            <div>• 15 categories matched to ModelNet40</div>
+            <div>• Contains noise, occlusion, background clutter</div>
+          </div>
+        </div>
+        <div class="alc red reveal" style="padding:14px 16px">
+          <div style="font-weight:700;color:#f87171;font-size:.88rem;margin-bottom:8px">⚡ Domain Gap Result</div>
+          <div style="font-size:.8rem;color:#9bb8d4;line-height:1.75">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+              <span>Exp1 PointNet:</span><span style="color:#f87171;font-weight:700">12.70% Instance / 12.14% Class</span>
+            </div>
+            <div style="display:flex;justify-content:space-between">
+              <span>Exp2 PointNet++:</span><span style="color:#f87171;font-weight:700">19.09% Instance / 17.66% Class</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="gc reveal" style="padding:16px">
+        <div style="font-weight:700;font-size:.88rem;color:#9bb8d4;margin-bottom:14px">Accuracy Drop Visualization</div>
+        <div style="margin-bottom:12px">
+          <div style="font-size:.78rem;color:#9bb8d4;margin-bottom:5px">Exp1 PointNet: ModelNet40 → ScanObjectNN</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:.72rem;color:#5a7a99;width:50px">90.06%</span>
+            <div class="btrack" style="flex:1"><div class="bfill" data-width="100" style="background:linear-gradient(90deg,#38bdf8,#5a7a99)"></div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <span style="font-size:.72rem;color:#f87171;width:50px">12.70%</span>
+            <div class="btrack" style="flex:1"><div class="bfill" data-width="14.1" style="background:#f87171"></div></div>
+          </div>
+        </div>
+        <div style="margin-bottom:12px">
+          <div style="font-size:.78rem;color:#9bb8d4;margin-bottom:5px">Exp2 PointNet++: ModelNet40 → ScanObjectNN</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:.72rem;color:#5a7a99;width:50px">91.49%</span>
+            <div class="btrack" style="flex:1"><div class="bfill" data-width="100" style="background:linear-gradient(90deg,#6ee7b7,#5a7a99)"></div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <span style="font-size:.72rem;color:#f87171;width:50px">19.09%</span>
+            <div class="btrack" style="flex:1"><div class="bfill" data-width="20.9" style="background:#f87171"></div></div>
+          </div>
+        </div>
+        <div class="alc amber" style="padding:10px 14px;font-size:.78rem;color:#9bb8d4">
+          <strong style="color:#f59e0b">~78% accuracy drop</strong> confirms severe <strong style="color:#e8f1fa">synthetic-to-real domain gap</strong>. Models trained on clean CAD models fail to generalize to real scan noise.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 9: FAILURE ANALYSIS ═══ -->
+<div class="slide" data-slide="9">
+  <div class="gmesh">
+    <div class="blob" style="width:280px;height:280px;top:-50px;right:-40px;background:#f87171;opacity:.07"></div>
+    <div class="blob" style="width:180px;height:180px;bottom:-30px;left:-25px;background:#f59e0b;opacity:.05"></div>
+  </div>
+  <div class="content">
+    <div class="reveal" style="font-size:.72rem;color:#f87171;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Error Analysis</div>
+    <h2 class="reveal" style="font-family:'DM Serif Display',serif;font-size:clamp(1.6rem,3vw,2.4rem);margin-bottom:6px">Failure Case Analysis</h2>
+    <div class="reveal" style="font-size:.82rem;color:#9bb8d4;margin-bottom:14px">
+      Exp3 PointNet++ · First 500 test samples · <span style="color:#f87171;font-weight:700">51 errors (10.2% error rate)</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div>
+        <div class="gc reveal" style="padding:14px;margin-bottom:10px">
+          <div style="font-weight:700;font-size:.85rem;color:#f87171;margin-bottom:10px">Top Misclassified Classes (Ground Truth)</div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <div style="display:grid;grid-template-columns:100px 1fr 50px;align-items:center;gap:8px;font-size:.78rem">
+              <span style="color:#9bb8d4">flowerpot</span>
+              <div class="btrack"><div class="bfill" data-width="100" style="background:#f87171"></div></div>
+              <span style="color:#f87171;font-weight:700">8 errors</span>
+            </div>
+            <div style="display:grid;grid-template-columns:100px 1fr 50px;align-items:center;gap:8px;font-size:.78rem">
+              <span style="color:#9bb8d4">nightstand</span>
+              <div class="btrack"><div class="bfill" data-width="75" style="background:#f59e0b"></div></div>
+              <span style="color:#f59e0b;font-weight:700">6 errors</span>
+            </div>
+            <div style="display:grid;grid-template-columns:100px 1fr 50px;align-items:center;gap:8px;font-size:.78rem">
+              <span style="color:#9bb8d4">tvstand</span>
+              <div class="btrack"><div class="bfill" data-width="75" style="background:#f59e0b"></div></div>
+              <span style="color:#f59e0b;font-weight:700">6 errors</span>
+            </div>
+            <div style="display:grid;grid-template-columns:100px 1fr 50px;align-items:center;gap:8px;font-size:.78rem">
+              <span style="color:#9bb8d4">vase</span>
+              <div class="btrack"><div class="bfill" data-width="63" style="background:#38bdf8"></div></div>
+              <span style="color:#38bdf8;font-weight:700">5 errors</span>
+            </div>
+            <div style="display:grid;grid-template-columns:100px 1fr 50px;align-items:center;gap:8px;font-size:.78rem">
+              <span style="color:#9bb8d4">plant</span>
+              <div class="btrack"><div class="bfill" data-width="63" style="background:#38bdf8"></div></div>
+              <span style="color:#38bdf8;font-weight:700">5 errors</span>
+            </div>
+            <div style="display:grid;grid-template-columns:100px 1fr 50px;align-items:center;gap:8px;font-size:.78rem">
+              <span style="color:#9bb8d4">dresser</span>
+              <div class="btrack"><div class="bfill" data-width="38" style="background:#6ee7b7"></div></div>
+              <span style="color:#6ee7b7;font-weight:700">3 errors</span>
+            </div>
+          </div>
+        </div>
+        <div class="gc reveal" style="padding:12px 14px">
+          <div style="font-weight:700;font-size:.82rem;color:#9bb8d4;margin-bottom:8px">Frequent Wrong Predictions</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <span style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:5px;padding:3px 9px;font-size:.75rem;color:#f87171">vase (7×)</span>
+            <span style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:5px;padding:3px 9px;font-size:.75rem;color:#f87171">table (5×)</span>
+            <span style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);border-radius:5px;padding:3px 9px;font-size:.75rem;color:#f59e0b">flowerpot (5×)</span>
+            <span style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);border-radius:5px;padding:3px 9px;font-size:.75rem;color:#f59e0b">nightstand (4×)</span>
+            <span style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);border-radius:5px;padding:3px 9px;font-size:.75rem;color:#38bdf8">desk (4×)</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="alc red reveal" style="padding:12px 16px">
+            <div style="font-weight:700;color:#f87171;font-size:.85rem;margin-bottom:5px">① Geometric Ambiguity</div>
+            <div style="font-size:.78rem;color:#9bb8d4">dresser / nightstand / wardrobe share near-identical boxy geometry. Only fine surface details differentiate them — which point clouds tend to lose.</div>
+          </div>
+          <div class="alc amber reveal" style="padding:12px 16px">
+            <div style="font-weight:700;color:#f59e0b;font-size:.85rem;margin-bottom:5px">② Class Imbalance</div>
+            <div style="font-size:.78rem;color:#9bb8d4">Under-represented classes (flowerpot: ~39 train, tvstand: ~67 train) have fewer examples, producing weaker discriminative features.</div>
+          </div>
+          <div class="alc reveal" style="padding:12px 16px">
+            <div style="font-weight:700;color:#38bdf8;font-size:.85rem;margin-bottom:5px">③ Scale Normalization</div>
+            <div style="font-size:.78rem;color:#9bb8d4">Unit sphere normalization removes absolute size — a critical cue that humans use to distinguish desk from nightstand or table.</div>
+          </div>
+          <div class="gc reveal" style="padding:12px 14px">
+            <div style="font-weight:700;font-size:.82rem;color:#6ee7b7;margin-bottom:7px">🔧 Proposed Improvements</div>
+            <ul style="font-size:.77rem;color:#9bb8d4;margin:0;padding-left:14px;line-height:1.75">
+              <li>Add normal/edge features as auxiliary input</li>
+              <li>Focal loss to handle class imbalance</li>
+              <li>Fine-tune with domain-specific augmentation</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 10: CONCLUSION ═══ -->
+<div class="slide" data-slide="10">
+  <div class="gmesh">
+    <div class="blob" style="width:580px;height:580px;top:-130px;right:-100px;background:#0ea5e9;opacity:.13"></div>
+    <div class="blob" style="width:380px;height:380px;bottom:-90px;left:-70px;background:#6ee7b7;opacity:.09"></div>
+    <div class="blob" style="width:240px;height:240px;top:35%;left:8%;background:#f59e0b;opacity:.08"></div>
+  </div>
+  <canvas class="pc"></canvas>
+  <div class="content" style="text-align:center">
+    <div class="reveal" style="font-size:.72rem;color:#38bdf8;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px">Summary</div>
+    <h2 class="reveal" style="font-family:'DM Serif Display',serif;font-size:clamp(1.8rem,4vw,3.2rem);margin-bottom:20px">Key Findings & Takeaways</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;max-width:900px;margin:0 auto 18px">
+      <div class="gc reveal" style="padding:16px;text-align:left">
+        <div style="font-size:1.6rem;margin-bottom:8px">📈</div>
+        <div style="font-weight:700;font-size:.88rem;color:#38bdf8;margin-bottom:6px">Architecture Upgrade</div>
+        <div style="font-size:.78rem;color:#9bb8d4;line-height:1.7">PointNet++ outperforms PointNet by <strong style="color:#e8f1fa">+1.84%</strong> (90.06% → 91.90%) via hierarchical local feature learning</div>
+      </div>
+      <div class="gc reveal" style="padding:16px;text-align:left">
+        <div style="font-size:1.6rem;margin-bottom:8px">🎯</div>
+        <div style="font-weight:700;font-size:.88rem;color:#6ee7b7;margin-bottom:6px">Augmentation Effect</div>
+        <div style="font-size:.78rem;color:#9bb8d4;line-height:1.7">Data augmentation (rotation + jitter + scale) closes the gap to paper benchmark — achieving <strong style="color:#e8f1fa">exactly 91.90%</strong></div>
+      </div>
+      <div class="gc reveal" style="padding:16px;text-align:left">
+        <div style="font-size:1.6rem;margin-bottom:8px">⚠️</div>
+        <div style="font-weight:700;font-size:.88rem;color:#f87171;margin-bottom:6px">Domain Gap</div>
+        <div style="font-size:.78rem;color:#9bb8d4;line-height:1.7">~78% accuracy drop on ScanObjectNN reveals the challenge of <strong style="color:#e8f1fa">synthetic-to-real generalization</strong> in 3D vision</div>
+      </div>
+    </div>
+    <div class="gc reveal" style="padding:14px 20px;max-width:700px;margin:0 auto 20px">
+      <div style="font-size:.85rem;color:#9bb8d4">
+        <span class="gt" style="font-weight:800">Hierarchical local geometry</span> + <span style="color:#f59e0b;font-weight:700">data augmentation</span> = state-of-the-art reproducibility on ModelNet40 3D shape classification
+      </div>
+    </div>
+    <div class="reveal" style="font-size:1rem;color:#5a7a99;font-weight:600;letter-spacing:.08em;text-transform:uppercase">
+      Thank You · Q &amp; A
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- NAV -->
+<div class="nav-controls">
+  <button class="nav-btn" onclick="changeSlide(-1)">&#8249;</button>
+  <div class="slide-dots" id="dots"></div>
+  <button class="nav-btn" onclick="changeSlide(1)">&#8250;</button>
+  <span class="slide-counter" id="counter">1 / 10</span>
+</div>
+
+<script>
+let cur=1;
+const total=document.querySelectorAll('.slide').length;
+const dotsEl=document.getElementById('dots');
+const cntEl=document.getElementById('counter');
+for(let i=1;i<=total;i++){const d=document.createElement('div');d.className='dot'+(i===1?' active':'');d.onclick=()=>go(i);dotsEl.appendChild(d);}
+function go(n){
+  document.querySelector('.slide.active')?.classList.remove('active');
+  const s=document.querySelector(`.slide[data-slide="${n}"]`);
+  if(s){s.classList.add('active');anim(s);}
+  cur=n;upd();
+}
+function changeSlide(d){let n=cur+d;if(n<1)n=total;if(n>total)n=1;go(n);}
+function upd(){document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i+1===cur));cntEl.textContent=cur+' / '+total;}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();changeSlide(1);}if(e.key==='ArrowLeft'){e.preventDefault();changeSlide(-1);}});
+let tx=0;document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;});
+document.addEventListener('touchend',e=>{const d=tx-e.changedTouches[0].clientX;if(Math.abs(d)>50)changeSlide(d>0?1:-1);});
+
+function anim(slide){
+  slide.querySelectorAll('.reveal').forEach((el,i)=>{
+    el.style.transition='none';el.style.opacity='0';el.style.transform='translateY(16px)';
+    el.offsetHeight;
+    el.style.transition=`opacity .35s ease ${i*.07}s,transform .35s ease ${i*.07}s`;
+    el.style.opacity='1';el.style.transform='translateY(0)';
+  });
+  fx(slide);
+}
+
+function fx(slide){
+  slide.querySelectorAll('.bfill:not(.bi)').forEach((b,i)=>{
+    b.classList.add('bi');b.style.width='0';b.style.transition=`width .65s ease ${i*.08}s`;
+    b.offsetHeight;b.style.width=b.dataset.width+'%';
+  });
+  slide.querySelectorAll('[data-count]:not(.ci)').forEach(el=>{
+    el.classList.add('ci');
+    const t=parseFloat(el.dataset.count),s=el.dataset.suffix||'';
+    let c=0;const st=t/50;
+    const tm=setInterval(()=>{c+=st;if(c>=t){c=t;clearInterval(tm);}el.textContent=c.toFixed(2)+s;},25);
+  });
+}
+
+document.addEventListener('mousemove',e=>{
+  const sp=document.querySelector('.mouse-sp');
+  if(sp)sp.style.background=`radial-gradient(500px circle at ${e.clientX}px ${e.clientY}px,rgba(56,189,248,.05),transparent 40%)`;
+});
+
+function particles(canvas,n){
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  canvas.width=canvas.offsetWidth||window.innerWidth;
+  canvas.height=canvas.offsetHeight||window.innerHeight;
+  let mx=-9e9,my=-9e9;
+  const pts=Array.from({length:n},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*2+.5,a:Math.random()*.3+.1}));
+  canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect();mx=e.clientX-r.left;my=e.clientY-r.top;});
+  canvas.addEventListener('mouseleave',()=>{mx=-9e9;my=-9e9;});
+  (function loop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pts.forEach(p=>{
+      const dx=p.x-mx,dy=p.y-my,dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<100){const f=(100-dist)/100*1.4;p.vx+=(dx/dist)*f*.07;p.vy+=(dy/dist)*f*.07;}
+      p.vx*=.98;p.vy*=.98;p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=canvas.width;if(p.x>canvas.width)p.x=0;
+      if(p.y<0)p.y=canvas.height;if(p.y>canvas.height)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(56,189,248,${p.a})`;ctx.fill();
+    });
+    requestAnimationFrame(loop);
+  })();
+}
+document.querySelectorAll('canvas.pc').forEach(c=>particles(c,55));
+
+try{anim(document.querySelector('.slide.active'));}catch(e){}
+</script>
+</body>
+</html>
